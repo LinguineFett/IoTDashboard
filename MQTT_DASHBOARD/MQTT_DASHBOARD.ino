@@ -7,6 +7,11 @@
 #include "DHTesp.h"
 
 #define LED 0 // D3 on the Node MCU
+#define LED2 4 // D2 on the NodeMCU
+#define LED3 5 // D1 on the NodeMCU
+#define ldrPin A0 // A0 on the NodeMCU
+
+int light; // light intensity
 
 #define SMTP_HOST "smtp.gmail.com" //SMTP gmail host.
 #define SMTP_PORT 465 //SMTP gmail port.
@@ -81,14 +86,17 @@ void callback(String topic, byte* message, unsigned int length) {
   Serial.print("Message arrived on topic: ");
   Serial.print(topic);
   Serial.print(". Message: ");
-  String messagein;
-  
-  for (int i = 0; i < length; i++) {
-    Serial.print((char)message[i]);
-    messagein += (char)message[i];
-  }
+ 
 
   if(topic=="room/light"){
+    String messagein;
+  
+    for (int i = 0; i < length; i++) {
+      //Serial.print((char)message[i]);
+      messagein += (char)message[i];
+    }
+
+  
     if (messagein == "ON"){
       Serial.println("Light is ON");
       digitalWrite(LED, HIGH);
@@ -97,6 +105,57 @@ void callback(String topic, byte* message, unsigned int length) {
       digitalWrite(LED, LOW);
     }
   }  
+
+  if (topic == "room/photoresistor"){  // Press Enter when updating the threshold, and wait a few seconds
+    String messagein;
+  
+    for (int i = 0; i < length; i++) {
+      //Serial.print((char)message[i]);
+      messagein += (char)message[i];
+    }
+
+    int value = messagein.toInt();
+
+    // the higher the value of light is (photoresistor intensity), the darker it is. 
+    if (value <= light){
+      digitalWrite(LED2, LOW);
+      digitalWrite(LED3, LOW);
+      Serial.println("LED off");
+    }else if (value > light) {
+      digitalWrite(LED2, HIGH);
+      digitalWrite(LED3, HIGH);
+      Serial.println("LED on");
+
+      ESP_Mail_Session session;
+
+      session.server.host_name = SMTP_HOST ;
+      session.server.port = SMTP_PORT;
+      session.login.email = AUTHOR_EMAIL;
+      session.login.password = AUTHOR_PASSWORD;
+      session.login.user_domain = "";
+
+      /* Declare the message class */
+      SMTP_Message message;
+    
+      message.sender.name = "Lights Alert";
+      message.sender.email = AUTHOR_EMAIL;
+      message.subject = "LED turned on";
+      message.addRecipient("MQTT",RECIPIENT_EMAIL);
+    
+       //Send HTML message
+      String htmlMsg = "<div style=\"color:#0000FF;\"><h1>Hello</h1><p>The light intensity is below the threshold. LED has been turned on.</p></div>";
+      message.html.content = htmlMsg.c_str();
+      message.html.content = htmlMsg.c_str();
+      message.text.charSet = "us-ascii";
+      message.html.transfer_encoding = Content_Transfer_Encoding::enc_7bit; 
+    
+      if (!smtp.connect(&session))
+        return;
+    
+      if (!MailClient.sendMail(&smtp, &message))
+        Serial.println("Error sending Email, " + smtp.errorReason());
+    }
+  }
 }
 
 
@@ -113,6 +172,7 @@ void reconnect() {
 
       Serial.println("connected");  
       client.subscribe("room/light");
+      client.subscribe("room/photoresistor");
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -133,7 +193,9 @@ void setup() {
   dht.setup(5, DHTesp::DHT11); // D1 on the Node MCU
   pinMode(LED, OUTPUT);
   digitalWrite(LED, LOW);
-
+  pinMode(LED2, OUTPUT);
+  pinMode(LED3, OUTPUT);
+  pinMode(ldrPin, INPUT);
 }
 
 void loop() {
@@ -146,14 +208,18 @@ void loop() {
 
   float temp= dht.getTemperature();
   float hum= dht.getHumidity();
+  light = analogRead(ldrPin);
     
     char tempArr [8];
     dtostrf(temp,6,2,tempArr);
     char humArr [8];
     dtostrf(hum,6,2,humArr);
+    char lightArr [8];
+    dtostrf(light,6,2,lightArr);
       
        client.publish("IoTlab/temperature", tempArr);
        client.publish("IoTlab/humidity", humArr);
+       client.publish("IoTlab/photoresistor", lightArr);
 
   delay(5000);
   }
