@@ -116,12 +116,12 @@ void callback(String topic, byte* message, unsigned int length) {
 
     int value = messagein.toInt();
 
-    // the higher the value of light is (photoresistor intensity), the darker it is. 
-    if (value <= light){
+    // a high value for light (photoresistor intensity) means that the room is dark 
+    if (value <= light){ // too bright, so turn off LEDs
       digitalWrite(LED2, LOW);
       digitalWrite(LED3, LOW);
       Serial.println("LED off");
-    }else if (value > light) {
+    }else if (value > light) { // too dark, so turn on LEDs
       digitalWrite(LED2, HIGH);
       digitalWrite(LED3, HIGH);
       Serial.println("LED on");
