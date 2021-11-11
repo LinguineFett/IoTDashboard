@@ -6,12 +6,25 @@
 #include <PubSubClient.h>
 #include "DHTesp.h"
 
-#define LED 0 // D3 on the Node MCU
-#define LED2 4 // D2 on the NodeMCU
-#define LED3 5 // D1 on the NodeMCU
-#define ldrPin A0 // A0 on the NodeMCU
+// LED and Photo Resistor
 
+//#define LED D8
+#define LED1 D8
+#define LED2 D7
+#define photoResister D6
+
+#define ldrPin A0
+
+// DHT11
+
+#define dht11 D0
+float temp; // Temperature level
 int light; // light intensity
+
+//Motor
+#define motor1 D1
+#define motor2 D2
+#define enable D3
 
 #define SMTP_HOST "smtp.gmail.com" //SMTP gmail host.
 #define SMTP_PORT 465 //SMTP gmail port.
@@ -86,25 +99,68 @@ void callback(String topic, byte* message, unsigned int length) {
   Serial.print("Message arrived on topic: ");
   Serial.print(topic);
   Serial.print(". Message: ");
- 
 
-  if(topic=="room/light"){
+  if (topic == "room/threshold"){  // Press Enter when updating the threshold, and wait a few seconds
     String messagein;
   
     for (int i = 0; i < length; i++) {
       //Serial.print((char)message[i]);
       messagein += (char)message[i];
     }
+    
+    int value = messagein.toFloat();
 
+    if (temp > value) {
+      ESP_Mail_Session session;
   
-    if (messagein == "ON"){
-      Serial.println("Light is ON");
-      digitalWrite(LED, HIGH);
-    }else if (messagein == "OFF") {
-      Serial.println("Light is OFF");
-      digitalWrite(LED, LOW);
+        session.server.host_name = SMTP_HOST ;
+        session.server.port = SMTP_PORT;
+        session.login.email = AUTHOR_EMAIL;
+        session.login.password = AUTHOR_PASSWORD;
+        session.login.user_domain = "";
+  
+        /* Declare the message class */
+        SMTP_Message message;
+      
+        message.sender.name = "Temperature Alert";
+        message.sender.email = AUTHOR_EMAIL;
+        message.subject = "Temp exceeded threshold";
+        message.addRecipient("MQTT",RECIPIENT_EMAIL);
+      
+         //Send HTML message
+        String htmlMsg = "<div style=\"color:#0000FF;\"><h1>Hello</h1><p>The temperature has exceeded the threshold. Do you want to turn on the Fan?</p><p>Please Reply with Y or N</p></div>";
+        message.html.content = htmlMsg.c_str();
+        message.html.content = htmlMsg.c_str();
+        message.text.charSet = "us-ascii";
+        message.html.transfer_encoding = Content_Transfer_Encoding::enc_7bit; 
+      
+        if (!smtp.connect(&session))
+          return;
+      
+        if (!MailClient.sendMail(&smtp, &message))
+          Serial.println("Error sending Email, " + smtp.errorReason());
     }
-  }  
+
+  }
+ 
+
+//  if(topic=="room/light"){
+//    String messagein;
+//  
+//    for (int i = 0; i < length; i++) {
+//      //Serial.print((char)message[i]);
+//      messagein += (char)message[i];
+//    }
+//
+//  
+//    if (messagein == "ON"){
+//      Serial.println("Light is ON");
+//      digitalWrite(LED, HIGH);
+//    }else if (messagein == "OFF") {
+//      Serial.println("Light is OFF");
+//      digitalWrite(LED, LOW);
+//    }
+//  }  
 
   if (topic == "room/photoresistor"){  // Press Enter when updating the threshold, and wait a few seconds
     String messagein;
@@ -118,12 +174,12 @@ void callback(String topic, byte* message, unsigned int length) {
 
     // a high value for light (photoresistor intensity) means that the room is dark 
     if (value <= light){ // too bright, so turn off LEDs
+      digitalWrite(LED1, LOW);
       digitalWrite(LED2, LOW);
-      digitalWrite(LED3, LOW);
       Serial.println("LED off");
     }else if (value > light) { // too dark, so turn on LEDs
+      digitalWrite(LED1, HIGH);
       digitalWrite(LED2, HIGH);
-      digitalWrite(LED3, HIGH);
       Serial.println("LED on");
 
       ESP_Mail_Session session;
@@ -190,11 +246,10 @@ void setup() {
   setup_wifi();
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
-  dht.setup(5, DHTesp::DHT11); // D1 on the Node MCU
-  pinMode(LED, OUTPUT);
-  digitalWrite(LED, LOW);
+  dht.setup(dht11, DHTesp::DHT11); // D1 on the Node MCU
+  pinMode(LED1, OUTPUT);
   pinMode(LED2, OUTPUT);
-  pinMode(LED3, OUTPUT);
+  pinMode(photoResister, INPUT);
   pinMode(ldrPin, INPUT);
 }
 
@@ -206,7 +261,7 @@ void loop() {
   if(!client.loop())
     client.connect("vanieriot");
 
-  float temp= dht.getTemperature();
+  temp= dht.getTemperature();
   float hum= dht.getHumidity();
   light = analogRead(ldrPin);
     
