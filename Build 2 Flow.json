@@ -1,0 +1,706 @@
+[
+    {
+        "id": "b45415091bea67e4",
+        "type": "tab",
+        "label": "Dashboard",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "a001b30e63d3e3e7",
+        "type": "mqtt in",
+        "z": "b45415091bea67e4",
+        "name": "",
+        "topic": "room/temperature",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "634f5115.6bd45",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "x": 90,
+        "y": 120,
+        "wires": [
+            [
+                "1e44b809c2bf0b06",
+                "afcdbc85aeb5b208"
+            ]
+        ]
+    },
+    {
+        "id": "1e44b809c2bf0b06",
+        "type": "ui_gauge",
+        "z": "b45415091bea67e4",
+        "name": "",
+        "group": "10b6e36b.0ae36d",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "Temperature",
+        "label": "Celsius",
+        "format": "{{value}}",
+        "min": "-20",
+        "max": "100",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "className": "",
+        "x": 650,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "64ce10c395cc77a7",
+        "type": "mqtt in",
+        "z": "b45415091bea67e4",
+        "name": "",
+        "topic": "room/humidity",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "634f5115.6bd45",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "x": 230,
+        "y": 520,
+        "wires": [
+            [
+                "cb5b731c8d552f3e"
+            ]
+        ]
+    },
+    {
+        "id": "cb5b731c8d552f3e",
+        "type": "ui_gauge",
+        "z": "b45415091bea67e4",
+        "name": "",
+        "group": "10b6e36b.0ae36d",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "gtype": "wave",
+        "title": "Humidity",
+        "label": "%",
+        "format": "{{value}}",
+        "min": "0",
+        "max": "100",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "className": "",
+        "x": 580,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "0960a68f941bfe57",
+        "type": "mqtt out",
+        "z": "b45415091bea67e4",
+        "name": "",
+        "topic": "room/light",
+        "qos": "0",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "634f5115.6bd45",
+        "x": 640,
+        "y": 620,
+        "wires": []
+    },
+    {
+        "id": "fb12597a5b6449bd",
+        "type": "ui_button",
+        "z": "b45415091bea67e4",
+        "name": "LED Button",
+        "group": "dec3e115.5b94e",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "Toggle LED Button",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "payload": "pressed",
+        "payloadType": "str",
+        "topic": "topic",
+        "topicType": "msg",
+        "x": 210,
+        "y": 620,
+        "wires": [
+            [
+                "845bcbaa659dd329"
+            ]
+        ]
+    },
+    {
+        "id": "845bcbaa659dd329",
+        "type": "function",
+        "z": "b45415091bea67e4",
+        "name": "Turn On/Off Light",
+        "func": "if(msg.payload === \"pressed\"){\n    if(context.global.state === \"OFF\"){\n      msg.payload = \"ON\";  \n    }else{\n      msg.payload = \"OFF\";\n    }\n    context.global.state = msg.payload;\n    }\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 450,
+        "y": 620,
+        "wires": [
+            [
+                "0960a68f941bfe57"
+            ]
+        ]
+    },
+    {
+        "id": "7f3530e574fc6e63",
+        "type": "mqtt in",
+        "z": "b45415091bea67e4",
+        "name": "",
+        "topic": "room/photoresistor",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "634f5115.6bd45",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "x": 230,
+        "y": 700,
+        "wires": [
+            [
+                "887b1f8ed66e7396"
+            ]
+        ]
+    },
+    {
+        "id": "887b1f8ed66e7396",
+        "type": "ui_chart",
+        "z": "b45415091bea67e4",
+        "name": "",
+        "group": "1c2efa63df20892e",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "label": "Light Intensity",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "0",
+        "ymax": "1500",
+        "removeOlder": 1,
+        "removeOlderPoints": "",
+        "removeOlderUnit": "60",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 620,
+        "y": 700,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "e6866f7f3aa1cb24",
+        "type": "mqtt out",
+        "z": "b45415091bea67e4",
+        "name": "",
+        "topic": "room/photoresistor",
+        "qos": "0",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "634f5115.6bd45",
+        "x": 610,
+        "y": 800,
+        "wires": []
+    },
+    {
+        "id": "a1858f9b5bb72d1a",
+        "type": "ui_numeric",
+        "z": "b45415091bea67e4",
+        "name": "",
+        "label": "Temperature Threshold",
+        "tooltip": "",
+        "group": "10b6e36b.0ae36d",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "wrap": false,
+        "passthru": false,
+        "topic": "tempThreshold",
+        "topicType": "str",
+        "format": "{{msg.payload}}",
+        "min": "-20",
+        "max": "100",
+        "step": "5",
+        "className": "",
+        "x": 110,
+        "y": 300,
+        "wires": [
+            [
+                "8178e1fc3f1214a6"
+            ]
+        ]
+    },
+    {
+        "id": "7005528316bb6da4",
+        "type": "ui_numeric",
+        "z": "b45415091bea67e4",
+        "name": "",
+        "label": "Light Threshold",
+        "tooltip": "",
+        "group": "1c2efa63df20892e",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "wrap": false,
+        "passthru": true,
+        "topic": "lightThreshold",
+        "topicType": "str",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "1000",
+        "step": "50",
+        "className": "",
+        "x": 240,
+        "y": 800,
+        "wires": [
+            [
+                "e6866f7f3aa1cb24"
+            ]
+        ]
+    },
+    {
+        "id": "7885c61d83118fd6",
+        "type": "function",
+        "z": "b45415091bea67e4",
+        "name": "Compare Temp and Threshold",
+        "func": "if(flow.get(\"temp\") > flow.get(\"tempThreshold\") && flow.get(\"canSendEmail\") == \"YES\") {\n    msg.payload = \"ON\";\n    flow.set(\"canSendEmail\", \"NO\");\n} else if (flow.get(\"temp\") <= flow.get(\"tempThreshold\")) {\n    msg.payload = \"OFF\";\n    flow.set(\"canSendEmail\", \"YES\");\n} else {\n    msg.payload = \"NOTHING\";\n    flow.set(\"canSendEmail\", \"NO\");\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "// Code added here will be run once\n// whenever the node is started.\nif(typeof flow.get(\"fanState\") == \"undefined\") {\n    flow.set(\"fanState\", \"FanState: OFF\");\n}",
+        "finalize": "",
+        "libs": [],
+        "x": 590,
+        "y": 220,
+        "wires": [
+            [
+                "fe0210300ce2ef19"
+            ]
+        ]
+    },
+    {
+        "id": "fe0210300ce2ef19",
+        "type": "switch",
+        "z": "b45415091bea67e4",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "ON",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "OFF",
+                "vt": "str"
+            },
+            {
+                "t": "empty"
+            },
+            {
+                "t": "nempty"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 4,
+        "x": 810,
+        "y": 220,
+        "wires": [
+            [
+                "9bee8a3f5dff2346"
+            ],
+            [
+                "0b1d1d78d843c18f"
+            ],
+            [
+                "149883b18c86eef3"
+            ],
+            [
+                "149883b18c86eef3"
+            ]
+        ]
+    },
+    {
+        "id": "a3ba940fd8487fbd",
+        "type": "e-mail",
+        "z": "b45415091bea67e4",
+        "server": "smtp.gmail.com",
+        "port": "465",
+        "secure": true,
+        "tls": true,
+        "name": "apptestinz@gmail.com",
+        "dname": "",
+        "x": 1260,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "0b1d1d78d843c18f",
+        "type": "mqtt out",
+        "z": "b45415091bea67e4",
+        "name": "Turn Off Fan",
+        "topic": "room/fan",
+        "qos": "0",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "fe76c8819021de81",
+        "x": 1030,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "b2aa46b1ba5d73b4",
+        "type": "mqtt out",
+        "z": "b45415091bea67e4",
+        "name": "Fan",
+        "topic": "room/fan",
+        "qos": "0",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "fe76c8819021de81",
+        "x": 850,
+        "y": 460,
+        "wires": []
+    },
+    {
+        "id": "6b1df347b1e02801",
+        "type": "e-mail in",
+        "z": "b45415091bea67e4",
+        "name": "",
+        "protocol": "IMAP",
+        "server": "imap.gmail.com",
+        "useSSL": true,
+        "autotls": "never",
+        "port": "993",
+        "box": "INBOX",
+        "disposition": "Read",
+        "criteria": "UNSEEN",
+        "repeat": "30",
+        "fetch": "auto",
+        "inputs": 0,
+        "x": 280,
+        "y": 420,
+        "wires": [
+            [
+                "10b046c954491c71"
+            ]
+        ]
+    },
+    {
+        "id": "10b046c954491c71",
+        "type": "function",
+        "z": "b45415091bea67e4",
+        "name": "Turn On/Off Fan",
+        "func": "if(msg.payload.includes(\"YES\")) {\n    flow.set(\"fanState\", \"ON\");\n    msg.payload = \"ON\";\n} else {\n    flow.set(\"fanState\", \"OFF\");\n    msg.payload = \"OFF\";\n}\n\nflow.set(\"canSendEmail\", \"NO\");\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 520,
+        "y": 440,
+        "wires": [
+            [
+                "b2aa46b1ba5d73b4"
+            ]
+        ]
+    },
+    {
+        "id": "afcdbc85aeb5b208",
+        "type": "function",
+        "z": "b45415091bea67e4",
+        "name": "",
+        "func": "flow.set(\"temp\", msg.payload);\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 300,
+        "y": 160,
+        "wires": [
+            [
+                "7885c61d83118fd6"
+            ]
+        ]
+    },
+    {
+        "id": "9bee8a3f5dff2346",
+        "type": "function",
+        "z": "b45415091bea67e4",
+        "name": "Message",
+        "func": "msg.payload = \"The temperature is \" + flow.get(\"temp\") + \". Would you like to turn on the fan?\"\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1040,
+        "y": 140,
+        "wires": [
+            [
+                "a3ba940fd8487fbd"
+            ]
+        ]
+    },
+    {
+        "id": "149883b18c86eef3",
+        "type": "function",
+        "z": "b45415091bea67e4",
+        "name": "Set FanState Off",
+        "func": "flow.set(\"fanState\", \"OFF\");\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1070,
+        "y": 300,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "8178e1fc3f1214a6",
+        "type": "function",
+        "z": "b45415091bea67e4",
+        "name": "",
+        "func": "// if(msg.payload != \"undefined\") {\n//     msg.payload = flow.get(\"tempthreshold\");\n// }\nflow.set(\"tempThreshold\", msg.payload);\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 340,
+        "y": 300,
+        "wires": [
+            [
+                "7885c61d83118fd6"
+            ]
+        ]
+    },
+    {
+        "id": "9a787176304cf6ae",
+        "type": "inject",
+        "z": "b45415091bea67e4",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "45",
+        "payloadType": "str",
+        "x": 80,
+        "y": 220,
+        "wires": [
+            [
+                "cf553c2d98089713"
+            ]
+        ]
+    },
+    {
+        "id": "cf553c2d98089713",
+        "type": "mqtt out",
+        "z": "b45415091bea67e4",
+        "name": "",
+        "topic": "room/temperature",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "fe76c8819021de81",
+        "x": 280,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "65be15f8931f07ed",
+        "type": "inject",
+        "z": "b45415091bea67e4",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "20",
+        "payloadType": "str",
+        "x": 80,
+        "y": 260,
+        "wires": [
+            [
+                "cf553c2d98089713"
+            ]
+        ]
+    },
+    {
+        "id": "634f5115.6bd45",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "localhost",
+        "port": "1883",
+        "clientid": "",
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": "",
+        "willMsg": {},
+        "sessionExpiry": ""
+    },
+    {
+        "id": "10b6e36b.0ae36d",
+        "type": "ui_group",
+        "name": "Temperature and Humidity",
+        "tab": "d6ae9f25.efcf1",
+        "order": 1,
+        "disp": true,
+        "width": "6",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "dec3e115.5b94e",
+        "type": "ui_group",
+        "name": "LED",
+        "tab": "d6ae9f25.efcf1",
+        "order": 1,
+        "disp": true,
+        "width": "6",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "1c2efa63df20892e",
+        "type": "ui_group",
+        "name": "Photoresistor",
+        "tab": "d6ae9f25.efcf1",
+        "order": 5,
+        "disp": true,
+        "width": "6",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "fe76c8819021de81",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "localhost",
+        "port": "1883",
+        "clientid": "",
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": "",
+        "willMsg": {},
+        "sessionExpiry": ""
+    },
+    {
+        "id": "d6ae9f25.efcf1",
+        "type": "ui_tab",
+        "name": "Project",
+        "icon": "dashboard",
+        "order": 1,
+        "disabled": false,
+        "hidden": false
+    }
+]
