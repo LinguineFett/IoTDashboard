@@ -6,10 +6,16 @@
 #include <PubSubClient.h>
 #include "DHTesp.h"
 
-// LED and Photo Resistor
+#include <SPI.h>
+#include <MFRC522.h>
 
-#define LED1 D8
-#define LED2 D7
+#include <NTPClient.h>
+#include <WiFiUdp.h>
+
+
+// LED and Photo Resistor
+#define LED1 D0
+#define LED2 D1
 
 #define photoResistorPIN A0
 
@@ -27,9 +33,9 @@ int light; // light intensity
 
 #define SMTP_HOST "smtp.gmail.com" //SMTP gmail host.
 #define SMTP_PORT 465 //SMTP gmail port.
-#define AUTHOR_EMAIL "apptestinz@gmail.com" //Sender email.
-#define AUTHOR_PASSWORD "100%awesomes" //Sender email password.
-#define RECIPIENT_EMAIL "apptestinz@gmail.com" //Just set this as the same as the sender email.
+#define AUTHOR_EMAIL "email@gmail.com" //Sender email.
+#define AUTHOR_PASSWORD "password" //Sender email password.
+#define RECIPIENT_EMAIL "email@gmail.com" //Just set this as the same as the sender email.
 
 SMTPSession smtp;
 DHTesp dht;
@@ -38,17 +44,30 @@ DHTesp dht;
 //const char* ssid = "Merry Xmas";
 //const char* password = "09475325323";
 
-const char* ssid = "VC-IsntSecure";
-const char* password = "Wagwan123";
+const char* ssid = "wifi";
+const char* password = "password";
 
 //const char* mqtt_server = "10.0.0.30";
 
 //const char* mqtt_server = "192.168.0.104";
-const char* mqtt_server = "192.168.166.68"; 
+const char* mqtt_server = "ip"; 
 
+
+constexpr uint8_t RST_PIN = D3;     // Configurable, see typical pin layout above
+constexpr uint8_t SS_PIN = D4;     // Configurable, see typical pin layout above
+
+MFRC522 rfid(SS_PIN, RST_PIN); // Instance of the class
+MFRC522::MIFARE_Key key;
+
+// Server time
+//WiFiUDP ntpUDP;
+//NTPClient timeClient(ntpUDP, "pool.ntp.org");
+
+#define BUZZER_PIN 5 // D1 on NodeMCU
 
 WiFiClient vanieriot;
-PubSubClient client(vanieriot);
+PubSubClient client(vanieriot); 
+
 
 void setup_email(){
    smtp.callback(smtpCallback);
@@ -196,6 +215,14 @@ void reconnect() {
 }
 
 
+
+
+String tag;
+String user;
+
+float userTemp;
+int userLight;
+
 void setup() {
   
   Serial.begin(115200);
@@ -203,9 +230,11 @@ void setup() {
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
   dht.setup(dht11, DHTesp::DHT11); // D0 on the Node MCU
-//  pinMode(LED1, OUTPUT);
-//  pinMode(LED2, OUTPUT);
-//  pinMode(photoResistorPIN, INPUT);
+
+  // LED and Photoresistor
+  pinMode(LED1, OUTPUT);
+  pinMode(LED2, OUTPUT);
+  pinMode(photoResistorPIN, INPUT);
   
   pinMode(motor1, OUTPUT);
   pinMode(motor2, OUTPUT);
@@ -213,9 +242,22 @@ void setup() {
   digitalWrite(motor1, HIGH);
   digitalWrite(motor2, LOW);
   analogWrite(enable, 0);
+
+  // RFID
+  SPI.begin(); // Init SPI bus
+  rfid.PCD_Init(); // Init MFRC522
+  pinMode(BUZZER_PIN, OUTPUT);
+
+  // time for the RFID email
+  //timeClient.begin();
+  //timeClient.setTimeOffset(0);
 }
 
 void loop() {
+  //timeClient.update();
+
+  //String formattedTime = timeClient.getFormattedTime();
+  
 
   if (!client.connected()) {
     reconnect();
@@ -223,16 +265,106 @@ void loop() {
   if(!client.loop())
     client.connect("vanieriot");
 
-  temp = dht.getTemperature();
-  hum = dht.getHumidity();
-//  light = analogRead(photoResistorPIN);
-    
-    client.publish("room/temperature", String(temp).c_str());
-    client.publish("room/humidity", String(hum).c_str());
-//    client.publish("room/photoresistor", lightArr);
+  
+  if ( ! rfid.PICC_IsNewCardPresent())
+    return;
+  if (rfid.PICC_ReadCardSerial()) {
+    Serial.println("Reading tag");
+    for (byte i = 0; i < 4; i++) {
+      tag += rfid.uid.uidByte[i];
+    }
+    Serial.println(tag);
 
-    delay(3000);
+    if (tag == "21112995"){
+      user = "Brandon";
+      userTemp = 24;
+      userLight = 1000;
+
+      digitalWrite(BUZZER_PIN, HIGH);
+      delay(5000);
+      digitalWrite(BUZZER_PIN, LOW);
+    }else if (tag == "12345678"){ // anotther tag...
+      user = "Other";
+      userTemp = 20;
+      userLight = 700;
+    }else{
+      Serial.println("Invalid user");
+      digitalWrite(BUZZER_PIN, HIGH);
+      delay(5000);
+      digitalWrite(BUZZER_PIN, LOW);
+    }
+    
+
+    if (user == "Brandon" || user == "Other"){
+      ESP_Mail_Session session;
+
+      session.server.host_name = SMTP_HOST ;
+      session.server.port = SMTP_PORT;
+      session.login.email = AUTHOR_EMAIL;
+      session.login.password = AUTHOR_PASSWORD;
+      session.login.user_domain = "";
+
+      /* Declare the message class */
+      SMTP_Message message;
+    
+      message.sender.name = "RFID tag alert";
+      message.sender.email = AUTHOR_EMAIL;
+      message.subject = "New login";
+      message.addRecipient("MQTT",RECIPIENT_EMAIL);
+    
+       //Send HTML message
+      String htmlMsg = "<div style=\"color:#0000FF;\"><h1>Hello</h1><p>User '" + user + "' was here.</p></div>";
+      message.html.content = htmlMsg.c_str();
+      message.html.content = htmlMsg.c_str();
+      message.text.charSet = "us-ascii";
+      message.html.transfer_encoding = Content_Transfer_Encoding::enc_7bit; 
+    
+      if (!smtp.connect(&session))
+        return;
+    
+      if (!MailClient.sendMail(&smtp, &message))
+        Serial.println("Error sending Email, " + smtp.errorReason());
+    }
+
+    int str_len = user.length()+1;
+    char tag_array[str_len];
+    user.toCharArray(tag_array, str_len);
+
+    char usertempArr [8];
+    dtostrf(userTemp,6,2,usertempArr);
+    char userlightArr [8];
+    dtostrf(userLight,6,2,userlightArr);
+
+    
+
+    temp = dht.getTemperature();
+    hum = dht.getHumidity();
+    light = analogRead(photoResistorPIN);
+
+    if (userTemp < temp){ // room is hot
+      // turn on fan...
+    }
+    if (userLight > light){ // room is dark
+      digitalWrite(LED1, HIGH);
+      digitalWrite(LED2, HIGH);
+      Serial.println("LED on");
+      // not tested
+    }
+
+
+    client.publish("IoTlab/RFID", tag_array);
+    client.publish("room/temperature", String(temp).c_str());
+    client.publish("user/temperature", usertempArr);
+    client.publish("user/light", userlightArr);
+    client.publish("room/humidity", String(hum).c_str());
+    //    client.publish("room/photoresistor", lightArr);
+
+    tag = "";
+    rfid.PICC_HaltA();
+    rfid.PCD_StopCrypto1();
+    //delay(3000);
   }
+}
   
   void smtpCallback(SMTP_Status status){
   /* Print the current status */
