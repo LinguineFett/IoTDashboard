@@ -4,32 +4,9 @@
 
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
-#include "DHTesp.h"
 
 #include <SPI.h>
 #include <MFRC522.h>
-
-#include <NTPClient.h>
-#include <WiFiUdp.h>
-
-
-// LED and Photo Resistor
-#define LED1 D7
-#define LED2 D8
-
-#define photoResistorPIN A0
-
-// DHT11
-
-#define dht11 D0
-float temp; // Temperature level
-float hum; // Humidity level
-int light; // light intensity
-
-//Motor
-#define motor1 D1
-#define motor2 D2
-#define enable D3
 
 #define SMTP_HOST "smtp.gmail.com" //SMTP gmail host.
 #define SMTP_PORT 465 //SMTP gmail port.
@@ -38,7 +15,6 @@ int light; // light intensity
 #define RECIPIENT_EMAIL "apptestinz@gmail.com" //Just set this as the same as the sender email.
 
 SMTPSession smtp;
-DHTesp dht;
 //const char* ssid = "TP-Link_8856_G";
 //const char* password = "87973365";
 //const char* ssid = "Merry Xmas";
@@ -55,6 +31,14 @@ const char* password = "Wagwan123";
 const char* mqtt_server = "192.168.166.161";
 
 //const char* mqtt_server = "192.168.0.160";
+
+constexpr uint8_t RST_PIN = D3;     // Configurable, see typical pin layout above
+constexpr uint8_t SS_PIN = D4;     // Configurable, see typical pin layout above
+
+MFRC522 rfid(SS_PIN, RST_PIN); // Instance of the class
+MFRC522::MIFARE_Key key;
+
+#define BUZZER_PIN 5 // D1 on NodeMCU
 
 WiFiClient vanieriot;
 PubSubClient client(vanieriot); 
@@ -109,6 +93,7 @@ void setup_wifi() {
   Serial.println(WiFi.localIP());
 }
 
+
 void callback(String topic, byte* message, unsigned int length) {
   Serial.print("Message arrived on topic: ");
   Serial.print(topic);
@@ -121,6 +106,8 @@ void callback(String topic, byte* message, unsigned int length) {
       //Serial.print((char)message[i]);
       messagein += (char)message[i];
     }
+
+    Serial.println(messagein);
     
     if(messagein == "ON") {
       analogWrite(enable, 200);
@@ -128,25 +115,78 @@ void callback(String topic, byte* message, unsigned int length) {
       analogWrite(enable, 0);
     }
   }
+}
 
-  if (topic == "room/photoresistorThreshold"){  // Press Enter when updating the threshold, and wait a few seconds
-    String messagein;
-  
-    for (int i = 0; i < length; i++) {
-      //Serial.print((char)message[i]);
-      messagein += (char)message[i];
+
+void reconnect() {
+  while (!client.connected()) {
+    Serial.print("Attempting MQTT connection...");
+      if (client.connect("vanieriot")) {
+
+      Serial.println("connected");  
+      client.subscribe("room/light");
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" try again in 5 seconds");
+      // Wait 5 seconds before retrying
+      delay(5000);
     }
+  }
+}
 
-    int value = messagein.toInt();
+String tag;
+String user;
 
-    // a high value for light (photoresistor intensity) means that the room is dark 
-    if (value <= light){ // too bright, so turn off LEDs
-      digitalWrite(LED1, LOW);
-      digitalWrite(LED2, LOW);
-    }else if (value > light) { // too dark, so turn on LEDs
-      digitalWrite(LED1, HIGH);
-      digitalWrite(LED2, HIGH);
+float userTemp;
+int userLight;
 
+void setup() {
+  Serial.begin(115200);
+  setup_wifi();
+  client.setServer(mqtt_server, 1883);
+  client.setCallback(callback);
+
+  // RFID
+  SPI.begin(); // Init SPI bus
+  rfid.PCD_Init(); // Init MFRC522
+  pinMode(BUZZER_PIN, OUTPUT);
+}
+
+void loop() {
+
+  if (!client.connected()) {
+    reconnect();
+  }
+  if(!client.loop())
+    client.connect("vanieriot");
+  
+  if ( ! rfid.PICC_IsNewCardPresent())
+    return;
+  if (rfid.PICC_ReadCardSerial()) {
+    Serial.println("Reading tag");
+    for (byte i = 0; i < 4; i++) {
+      tag += rfid.uid.uidByte[i];
+    }
+    Serial.println(tag);
+
+    if (tag == "21112995"){
+      user = "Brandon";
+      userTemp = 24;
+      userLight = 1000;
+    }else if (tag == "12345678"){ // anotther tag...
+      user = "Other";
+      userTemp = 20;
+      userLight = 700;
+    }else{
+      Serial.println("Invalid user");
+      digitalWrite(BUZZER_PIN, HIGH);
+      delay(5000);
+      digitalWrite(BUZZER_PIN, LOW);
+    }
+    
+
+    if (user == "Brandon" || user == "Other"){
       ESP_Mail_Session session;
 
       session.server.host_name = SMTP_HOST ;
@@ -158,13 +198,13 @@ void callback(String topic, byte* message, unsigned int length) {
       /* Declare the message class */
       SMTP_Message message;
     
-      message.sender.name = "Lights Alert";
+      message.sender.name = "RFID tag alert";
       message.sender.email = AUTHOR_EMAIL;
-      message.subject = "LED turned on";
+      message.subject = "New login";
       message.addRecipient("MQTT",RECIPIENT_EMAIL);
     
        //Send HTML message
-      String htmlMsg = "<div style=\"color:#0000FF;\"><h1>Hello</h1><p>The light intensity is below the threshold. LED has been turned on.</p></div>";
+      String htmlMsg = "<div style=\"color:#0000FF;\"><h1>Hello</h1><p>User '" + user + "' was here.</p></div>";
       message.html.content = htmlMsg.c_str();
       message.html.content = htmlMsg.c_str();
       message.text.charSet = "us-ascii";
@@ -176,62 +216,25 @@ void callback(String topic, byte* message, unsigned int length) {
       if (!MailClient.sendMail(&smtp, &message))
         Serial.println("Error sending Email, " + smtp.errorReason());
     }
+
+    int str_len = user.length()+1;
+    char tag_array[str_len];
+    user.toCharArray(tag_array, str_len);
+
+    char usertempArr [8];
+    dtostrf(userTemp,6,2,usertempArr);
+    char userlightArr [8];
+    dtostrf(userLight,6,2,userlightArr);
+
+    client.publish("IoTlab/RFID", tag_array);
+    client.publish("user/temperature", usertempArr);
+    client.publish("user/light", userlightArr);
+
+    tag = "";
+    rfid.PICC_HaltA();
+    rfid.PCD_StopCrypto1();
+    //delay(3000);
   }
-}
-
-void reconnect() {
-  while (!client.connected()) {
-    Serial.print("Attempting MQTT connection...");
-      if (client.connect("vanieriot")) {
-
-      Serial.println("connected");  
-      client.subscribe("room/fan");
-      client.subscribe("room/light");
-      client.subscribe("room/photoresistorThreshold");
-    } else {
-      Serial.print("failed, rc=");
-      Serial.print(client.state());
-      Serial.println(" try again in 5 seconds");
-      // Wait 5 seconds before retrying
-      delay(5000);
-    }
-  }
-}
-
-void setup() {
-  Serial.begin(115200);
-  setup_wifi();
-  client.setServer(mqtt_server, 1883);
-  client.setCallback(callback);
-  dht.setup(dht11, DHTesp::DHT11); // D0 on the Node MCU
-
-  // LED and Photoresistor
-  pinMode(LED1, OUTPUT);
-  pinMode(LED2, OUTPUT);
-  pinMode(photoResistorPIN, INPUT);
-  
-  pinMode(motor1, OUTPUT);
-  pinMode(motor2, OUTPUT);
-  pinMode(enable, OUTPUT);
-  digitalWrite(motor1, HIGH);
-  digitalWrite(motor2, LOW);
-  analogWrite(enable, 0);
-}
-
-void loop() {
-  if (!client.connected()) {
-    reconnect();
-  }
-  if(!client.loop())
-    client.connect("vanieriot");
-    
-    temp = dht.getTemperature();
-    hum = dht.getHumidity();
-    light = analogRead(photoResistorPIN);
-
-    client.publish("room/temperature", String(temp).c_str());
-    client.publish("room/humidity", String(hum).c_str());
-    client.publish("room/photoresistor", String(light).c_str());
 }
   
   void smtpCallback(SMTP_Status status){
