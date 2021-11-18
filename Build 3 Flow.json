@@ -185,52 +185,8 @@
         "y": 700,
         "wires": [
             [
-                "ecdc13a5a1016cf1"
+                "bebf8a0933c8d2d4"
             ]
-        ]
-    },
-    {
-        "id": "ecdc13a5a1016cf1",
-        "type": "ui_chart",
-        "z": "03dc8dc28b99e617",
-        "name": "",
-        "group": "4e524197d8a2efca",
-        "order": 1,
-        "width": 0,
-        "height": 0,
-        "label": "Light Intensity",
-        "chartType": "line",
-        "legend": "false",
-        "xformat": "HH:mm:ss",
-        "interpolate": "linear",
-        "nodata": "",
-        "dot": false,
-        "ymin": "0",
-        "ymax": "1500",
-        "removeOlder": 1,
-        "removeOlderPoints": "",
-        "removeOlderUnit": "60",
-        "cutout": 0,
-        "useOneColor": false,
-        "useUTC": false,
-        "colors": [
-            "#1f77b4",
-            "#aec7e8",
-            "#ff7f0e",
-            "#2ca02c",
-            "#98df8a",
-            "#d62728",
-            "#ff9896",
-            "#9467bd",
-            "#c5b0d5"
-        ],
-        "outputs": 1,
-        "useDifferentColor": false,
-        "className": "",
-        "x": 620,
-        "y": 700,
-        "wires": [
-            []
         ]
     },
     {
@@ -286,7 +242,7 @@
         "name": "",
         "label": "Light Threshold",
         "tooltip": "",
-        "group": "4e524197d8a2efca",
+        "group": "20cc05391917b84c",
         "order": 0,
         "width": 0,
         "height": 0,
@@ -296,7 +252,7 @@
         "topicType": "str",
         "format": "{{value}}",
         "min": 0,
-        "max": "1000",
+        "max": "3000",
         "step": "50",
         "className": "",
         "x": 260,
@@ -747,6 +703,33 @@
         ]
     },
     {
+        "id": "bebf8a0933c8d2d4",
+        "type": "ui_gauge",
+        "z": "03dc8dc28b99e617",
+        "name": "",
+        "group": "20cc05391917b84c",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "gauge",
+        "label": "units",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "3000",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "className": "",
+        "x": 610,
+        "y": 700,
+        "wires": []
+    },
+    {
         "id": "300e684c2e30ce26",
         "type": "mqtt-broker",
         "name": "",
@@ -795,7 +778,7 @@
         "className": ""
     },
     {
-        "id": "4e524197d8a2efca",
+        "id": "20cc05391917b84c",
         "type": "ui_group",
         "name": "Photoresistor",
         "tab": "d6ae9f25.efcf1",
