@@ -10,9 +10,9 @@
 
 #define SMTP_HOST "smtp.gmail.com" //SMTP gmail host.
 #define SMTP_PORT 465 //SMTP gmail port.
-#define AUTHOR_EMAIL "apptestinz@gmail.com" //Sender email.
-#define AUTHOR_PASSWORD "100%awesomes" //Sender email password.
-#define RECIPIENT_EMAIL "apptestinz@gmail.com" //Just set this as the same as the sender email.
+#define AUTHOR_EMAIL "brandonrpi.send@gmail.com" //Sender email.
+#define AUTHOR_PASSWORD "nguyensend" //Sender email password.
+#define RECIPIENT_EMAIL "brandonrpi.receive@gmail.com" //Just set this as the same as the sender email.
 
 SMTPSession smtp;
 //const char* ssid = "TP-Link_8856_G";
@@ -26,9 +26,9 @@ SMTPSession smtp;
 //const char* ssid = "TP-Link_2AD8";
 //const char* password = "14730078";
 
-const char* ssid = "BigBalls";
-const char* password = "Wagwan123";
-const char* mqtt_server = "192.168.166.161";
+const char* ssid = "BELL746";
+const char* password = "D9F61C74";
+const char* mqtt_server = "192.168.2.239";
 
 //const char* mqtt_server = "192.168.0.160";
 
@@ -109,11 +109,11 @@ void callback(String topic, byte* message, unsigned int length) {
 
     Serial.println(messagein);
     
-    if(messagein == "ON") {
-      analogWrite(enable, 200);
-    } else {
-      analogWrite(enable, 0);
-    }
+//    if(messagein == "ON") {
+//      analogWrite(enable, 200);
+//    } else {
+//      analogWrite(enable, 0);
+//    }
   }
 }
 
@@ -174,7 +174,7 @@ void loop() {
       user = "Brandon";
       userTemp = 24;
       userLight = 1000;
-    }else if (tag == "12345678"){ // anotther tag...
+    }else if (tag == "12345678"){ // another tag...
       user = "Other";
       userTemp = 20;
       userLight = 700;
@@ -183,38 +183,6 @@ void loop() {
       digitalWrite(BUZZER_PIN, HIGH);
       delay(5000);
       digitalWrite(BUZZER_PIN, LOW);
-    }
-    
-
-    if (user == "Brandon" || user == "Other"){
-      ESP_Mail_Session session;
-
-      session.server.host_name = SMTP_HOST ;
-      session.server.port = SMTP_PORT;
-      session.login.email = AUTHOR_EMAIL;
-      session.login.password = AUTHOR_PASSWORD;
-      session.login.user_domain = "";
-
-      /* Declare the message class */
-      SMTP_Message message;
-    
-      message.sender.name = "RFID tag alert";
-      message.sender.email = AUTHOR_EMAIL;
-      message.subject = "New login";
-      message.addRecipient("MQTT",RECIPIENT_EMAIL);
-    
-       //Send HTML message
-      String htmlMsg = "<div style=\"color:#0000FF;\"><h1>Hello</h1><p>User '" + user + "' was here.</p></div>";
-      message.html.content = htmlMsg.c_str();
-      message.html.content = htmlMsg.c_str();
-      message.text.charSet = "us-ascii";
-      message.html.transfer_encoding = Content_Transfer_Encoding::enc_7bit; 
-    
-      if (!smtp.connect(&session))
-        return;
-    
-      if (!MailClient.sendMail(&smtp, &message))
-        Serial.println("Error sending Email, " + smtp.errorReason());
     }
 
     int str_len = user.length()+1;
