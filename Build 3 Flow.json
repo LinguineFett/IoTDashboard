@@ -556,7 +556,7 @@
         "type": "function",
         "z": "700a4e0be0c758d2",
         "name": "",
-        "func": "if(msg.payload == \"YES\" && node.get(\"canSendEmail\") == \"YES\") {\n    msg.payload = \"SEND\";\n    node.get(\"canSendEmail\") == \"NO\";\n} else if (msg.payload == \"NO\"){\n    node.get(\"canSendEmail\") == \"YES\";\n    msg.payload = \"DONTSEND\";\n} else {\n    msg.payload = \"DONTSEND\";\n}\nreturn msg;",
+        "func": "if(msg.payload == \"ON\" && context.get(\"canSendEmail\") == \"YES\") {\n    msg.payload = \"SEND\";\n    context.set(\"canSendEmail\", \"NO\");\n} else if (msg.payload == \"OFF\"){\n    context.set(\"canSendEmail\", \"YES\");\n    msg.payload = \"DONTSEND\";\n} else {\n    msg.payload = \"DONTSEND\";\n}\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
