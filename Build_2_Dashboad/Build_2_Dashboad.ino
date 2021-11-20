@@ -1,27 +1,18 @@
-#include <ESP_Mail_Client.h>
-#include <ESP_Mail_FS.h>
-#include <SDK_Version_Common.h>
-
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
-#include "DHTesp.h"
-
 #include <SPI.h>
 #include <MFRC522.h>
-
-#include <NTPClient.h>
 #include <WiFiUdp.h>
-
+#include "DHTesp.h"
 
 // LED and Photo Resistor
 #define LED1 D7
 #define LED2 D8
-
 #define photoResistorPIN A0
 
 // DHT11
-
 #define dht11 D0
+DHTesp dht;
 float temp; // Temperature level
 float hum; // Humidity level
 int light; // light intensity
@@ -31,66 +22,145 @@ int light; // light intensity
 #define motor2 D2
 #define enable D3
 
-#define SMTP_HOST "smtp.gmail.com" //SMTP gmail host.
-#define SMTP_PORT 465 //SMTP gmail port.
-#define AUTHOR_EMAIL "apptestinz@gmail.com" //Sender email.
-#define AUTHOR_PASSWORD "100%awesomes" //Sender email password.
-#define RECIPIENT_EMAIL "apptestinz@gmail.com" //Just set this as the same as the sender email.
-
-SMTPSession smtp;
-DHTesp dht;
 //const char* ssid = "TP-Link_8856_G";
 //const char* password = "87973365";
 //const char* ssid = "Merry Xmas";
 //const char* password = "09475325323";
 
-//const char* mqtt_server = "10.0.0.30";
+const char* ssid = "Homeless";
+const char* password = "Number11";
+const char* mqtt_server = "10.0.0.30";
 
 //const char* mqtt_server = "192.168.0.104";
 //const char* ssid = "TP-Link_2AD8";
 //const char* password = "14730078";
 
-const char* ssid = "BigBalls";
-const char* password = "Wagwan123";
-const char* mqtt_server = "192.168.166.161";
+//const char* ssid = "BigBalls";
+//const char* password = "Wagwan123";
+//const char* mqtt_server = "192.168.166.161";
 
 //const char* mqtt_server = "192.168.0.160";
 
 WiFiClient vanieriot;
-PubSubClient client(vanieriot); 
+WiFiClient vanieriot2;
+PubSubClient clientFan(vanieriot);
+PubSubClient clientLight(vanieriot2);
 
-void setup_email(){
-   smtp.callback(smtpCallback);
-   ESP_Mail_Session session;
+void callback(String topic, byte* message, unsigned int length) {
+  Serial.print("Message arrived on topic: ");
+  Serial.print(topic);
+  Serial.println(". Message: ");
 
-  /* Set the session config */
-  session.server.host_name = SMTP_HOST;
-  session.server.port = SMTP_PORT;
-  session.login.email = AUTHOR_EMAIL;
-  session.login.password = AUTHOR_PASSWORD;
-  session.login.user_domain = "";
-
-  /* Declare the message class */
-  SMTP_Message message;
-
-  /* Set the message headers */
-  message.sender.name = "ESP";
-  message.sender.email = AUTHOR_EMAIL;
-  message.subject = "ESP Test Email";
-  message.addRecipient("Admin", RECIPIENT_EMAIL);
+  if (topic == "room/fan") {  // Press Enter when updating the threshold, and wait a few seconds
+    String messagein;
   
-  String textMsg = "The temperature is passed the threshold! Turn on LED?";
-  message.text.content = textMsg.c_str();
-  message.text.charSet = "us-ascii";
-  message.text.transfer_encoding = Content_Transfer_Encoding::enc_7bit;
+    for (int i = 0; i < length; i++) {
+      //Serial.print((char)message[i]);
+      messagein += (char)message[i];
+    }
+    
+    if(messagein == "ON") {
+      analogWrite(enable, 200);
+    } else {
+      analogWrite(enable, 0);
+    }
+  }
+  if (topic == "room/photoresistorThreshold"){  // Press Enter when updating the threshold, and wait a few seconds
+    String messagein;
+  
+    for (int i = 0; i < length; i++) {
+      messagein += (char)message[i];
+    }
+    int threshold = messagein.toInt();
 
-  /* Connect to server with the session config */
-  if (!smtp.connect(&session))
-    return;
+    // a high value for light (photoresistor intensity) means that the room is dark 
+    if (light >= threshold){ // too bright, so turn off LEDs
+      digitalWrite(LED1, LOW);
+      digitalWrite(LED2, LOW);
+      clientLight.publish("room/led", "OFF");
+    }else if (light < threshold) { // too dark, so turn on LEDs
+      digitalWrite(LED1, HIGH);
+      digitalWrite(LED2, HIGH);
+      clientLight.publish("room/led", "ON");
+    }
+  }
+}
 
-  /* Start sending Email and close the session */
-  if (!MailClient.sendMail(&smtp, &message))
-    Serial.println("Error sending Email, " + smtp.errorReason());
+void setup() {
+  Serial.begin(115200);
+  setup_wifi();
+  clientFan.setServer(mqtt_server, 1883);
+  clientFan.setCallback(callback);
+  clientLight.setServer(mqtt_server, 1883);
+  clientLight.setCallback(callback);
+  dht.setup(dht11, DHTesp::DHT11); // D0 on the Node MCU
+
+  // LED and Photoresistor
+  pinMode(LED1, OUTPUT);
+  pinMode(LED2, OUTPUT);
+  digitalWrite(LED1, LOW);
+  digitalWrite(LED2, LOW);
+  pinMode(photoResistorPIN, INPUT);
+  
+  pinMode(motor1, OUTPUT);
+  pinMode(motor2, OUTPUT);
+  pinMode(enable, OUTPUT);
+  digitalWrite(motor1, HIGH);
+  digitalWrite(motor2, LOW);
+  analogWrite(enable, 0);
+}
+
+void loop() {
+  if (!clientFan.connected())
+    reconnectFanClient();
+    
+  if(!clientFan.loop())
+    clientFan.connect("vanieriot");
+
+  if (!clientLight.connected())
+    reconnectLightClient();
+    
+  if(!clientLight.loop())
+    clientLight.connect("vanieriot2");
+    
+    temp = dht.getTemperature();
+    hum = dht.getHumidity();
+    light = analogRead(photoResistorPIN);
+
+    clientFan.publish("room/temperature", String(temp).c_str());
+    clientFan.publish("room/humidity", String(hum).c_str());
+    clientLight.publish("room/photoresistor", String(light).c_str());
+    delay(2000);
+}
+
+void reconnectFanClient() {
+  while (!clientFan.connected()) {
+    Serial.print("Attempting MQTT connection...");
+      if (clientFan.connect("vanieriot")) {
+      Serial.println("connected Fan");  
+      clientFan.subscribe("room/fan");
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(clientFan.state());
+      Serial.println(" try again in 5 seconds");
+      delay(5000);
+    }
+  }
+}
+
+void reconnectLightClient() {
+  while (!clientLight.connected()) {
+    Serial.print("Attempting MQTT connection...");
+      if (clientLight.connect("vanieriot2")) {
+      Serial.println("connected Light");  
+      clientLight.subscribe("room/photoresistorThreshold");
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(clientLight.state());
+      Serial.println(" try again in 5 seconds");
+      delay(5000);
+    }
+  }
 }
 
 void setup_wifi() {
@@ -108,156 +178,3 @@ void setup_wifi() {
   Serial.print("WiFi connected - ESP-8266 IP address: ");
   Serial.println(WiFi.localIP());
 }
-
-void callback(String topic, byte* message, unsigned int length) {
-  Serial.print("Message arrived on topic: ");
-  Serial.print(topic);
-  Serial.print(". Message: ");
-
-  if (topic == "room/fan") {  // Press Enter when updating the threshold, and wait a few seconds
-    String messagein;
-  
-    for (int i = 0; i < length; i++) {
-      //Serial.print((char)message[i]);
-      messagein += (char)message[i];
-    }
-    
-    if(messagein == "ON") {
-      analogWrite(enable, 200);
-    } else {
-      analogWrite(enable, 0);
-    }
-  }
-
-  if (topic == "room/photoresistorThreshold"){  // Press Enter when updating the threshold, and wait a few seconds
-    String messagein;
-  
-    for (int i = 0; i < length; i++) {
-      //Serial.print((char)message[i]);
-      messagein += (char)message[i];
-    }
-
-    int value = messagein.toInt();
-
-    // a high value for light (photoresistor intensity) means that the room is dark 
-    if (value <= light){ // too bright, so turn off LEDs
-      digitalWrite(LED1, LOW);
-      digitalWrite(LED2, LOW);
-    }else if (value > light) { // too dark, so turn on LEDs
-      digitalWrite(LED1, HIGH);
-      digitalWrite(LED2, HIGH);
-
-      ESP_Mail_Session session;
-
-      session.server.host_name = SMTP_HOST ;
-      session.server.port = SMTP_PORT;
-      session.login.email = AUTHOR_EMAIL;
-      session.login.password = AUTHOR_PASSWORD;
-      session.login.user_domain = "";
-
-      /* Declare the message class */
-      SMTP_Message message;
-    
-      message.sender.name = "Lights Alert";
-      message.sender.email = AUTHOR_EMAIL;
-      message.subject = "LED turned on";
-      message.addRecipient("MQTT",RECIPIENT_EMAIL);
-    
-       //Send HTML message
-      String htmlMsg = "<div style=\"color:#0000FF;\"><h1>Hello</h1><p>The light intensity is below the threshold. LED has been turned on.</p></div>";
-      message.html.content = htmlMsg.c_str();
-      message.html.content = htmlMsg.c_str();
-      message.text.charSet = "us-ascii";
-      message.html.transfer_encoding = Content_Transfer_Encoding::enc_7bit; 
-    
-      if (!smtp.connect(&session))
-        return;
-    
-      if (!MailClient.sendMail(&smtp, &message))
-        Serial.println("Error sending Email, " + smtp.errorReason());
-    }
-  }
-}
-
-void reconnect() {
-  while (!client.connected()) {
-    Serial.print("Attempting MQTT connection...");
-      if (client.connect("vanieriot")) {
-
-      Serial.println("connected");  
-      client.subscribe("room/fan");
-      client.subscribe("room/light");
-      client.subscribe("room/photoresistorThreshold");
-    } else {
-      Serial.print("failed, rc=");
-      Serial.print(client.state());
-      Serial.println(" try again in 5 seconds");
-      // Wait 5 seconds before retrying
-      delay(5000);
-    }
-  }
-}
-
-void setup() {
-  Serial.begin(115200);
-  setup_wifi();
-  client.setServer(mqtt_server, 1883);
-  client.setCallback(callback);
-  dht.setup(dht11, DHTesp::DHT11); // D0 on the Node MCU
-
-  // LED and Photoresistor
-  pinMode(LED1, OUTPUT);
-  pinMode(LED2, OUTPUT);
-  pinMode(photoResistorPIN, INPUT);
-  
-  pinMode(motor1, OUTPUT);
-  pinMode(motor2, OUTPUT);
-  pinMode(enable, OUTPUT);
-  digitalWrite(motor1, HIGH);
-  digitalWrite(motor2, LOW);
-  analogWrite(enable, 0);
-}
-
-void loop() {
-  if (!client.connected()) {
-    reconnect();
-  }
-  if(!client.loop())
-    client.connect("vanieriot");
-    
-    temp = dht.getTemperature();
-    hum = dht.getHumidity();
-    light = analogRead(photoResistorPIN);
-
-    client.publish("room/temperature", String(temp).c_str());
-    client.publish("room/humidity", String(hum).c_str());
-    client.publish("room/photoresistor", String(light).c_str());
-}
-  
-  void smtpCallback(SMTP_Status status){
-  /* Print the current status */
-  Serial.println(status.info());
-
-  /* Print the sending result */
-  if (status.success()){
-    Serial.println("----------------");
-    ESP_MAIL_PRINTF("Message sent success: %d\n", status.completedCount());
-    ESP_MAIL_PRINTF("Message sent failled: %d\n", status.failedCount());
-    Serial.println("----------------\n");
-    struct tm dt;
-
-    for (size_t i = 0; i < smtp.sendingResult.size(); i++){
-      /* Get the result item */
-      SMTP_Result result = smtp.sendingResult.getItem(i);
-      time_t ts = (time_t)result.timestamp;
-      localtime_r(&ts, &dt);
-
-      ESP_MAIL_PRINTF("Message No: %d\n", i + 1);
-      ESP_MAIL_PRINTF("Status: %s\n", result.completed ? "success" : "failed");
-      ESP_MAIL_PRINTF("Date/Time: %d/%d/%d %d:%d:%d\n", dt.tm_year + 1900, dt.tm_mon + 1, dt.tm_mday, dt.tm_hour, dt.tm_min, dt.tm_sec);
-      ESP_MAIL_PRINTF("Recipient: %s\n", result.recipients);
-      ESP_MAIL_PRINTF("Subject: %s\n", result.subject);
-    }
-    Serial.println("----------------\n");
-  }
- }
