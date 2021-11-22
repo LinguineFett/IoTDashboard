@@ -97,7 +97,7 @@
         "seg1": "",
         "seg2": "",
         "className": "",
-        "x": 460,
+        "x": 260,
         "y": 240,
         "wires": []
     },
@@ -113,8 +113,8 @@
         "nl": false,
         "rap": true,
         "rh": 0,
-        "x": 130,
-        "y": 300,
+        "x": 430,
+        "y": 240,
         "wires": [
             [
                 "af807881d84159eb"
@@ -135,8 +135,8 @@
         "correl": "",
         "expiry": "",
         "broker": "8fd8ab9f071409b1",
-        "x": 580,
-        "y": 360,
+        "x": 600,
+        "y": 300,
         "wires": []
     },
     {
@@ -187,8 +187,8 @@
         "max": "3000",
         "step": "50",
         "className": "",
-        "x": 340,
-        "y": 360,
+        "x": 360,
+        "y": 300,
         "wires": [
             [
                 "f0cf6acffda3cf37"
@@ -284,7 +284,7 @@
         "name": "Fan",
         "topic": "room/fan",
         "qos": "0",
-        "retain": "",
+        "retain": "true",
         "respTopic": "",
         "contentType": "",
         "userProps": "",
@@ -306,7 +306,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 340,
+        "x": 360,
         "y": 180,
         "wires": [
             [
@@ -439,11 +439,11 @@
         "rap": true,
         "rh": 0,
         "x": 110,
-        "y": 500,
+        "y": 420,
         "wires": [
             [
                 "8b115f392622c13b",
-                "6ebfd70a61875298"
+                "bfca78d4e0b1b6dd"
             ]
         ]
     },
@@ -451,17 +451,17 @@
         "id": "8b115f392622c13b",
         "type": "ui_text",
         "z": "700a4e0be0c758d2",
-        "group": "1e0cf6ea06414446",
-        "order": 0,
+        "group": "dd6a69fa5cd63ef0",
+        "order": 1,
         "width": 0,
         "height": 0,
         "name": "",
-        "label": "RFID tag number",
+        "label": "RFID Tag Name",
         "format": "{{msg.payload}}",
         "layout": "row-left",
         "className": "",
-        "x": 490,
-        "y": 500,
+        "x": 540,
+        "y": 420,
         "wires": []
     },
     {
@@ -496,8 +496,8 @@
         "nl": false,
         "rap": true,
         "rh": 0,
-        "x": 80,
-        "y": 360,
+        "x": 100,
+        "y": 300,
         "wires": [
             [
                 "87adb5c94048e763"
@@ -527,8 +527,8 @@
         "seg1": "",
         "seg2": "",
         "className": "",
-        "x": 510,
-        "y": 300,
+        "x": 590,
+        "y": 240,
         "wires": []
     },
     {
@@ -543,8 +543,8 @@
         "nl": false,
         "rap": true,
         "rh": 0,
-        "x": 110,
-        "y": 420,
+        "x": 100,
+        "y": 360,
         "wires": [
             [
                 "2697b8a97d6f6803"
@@ -562,8 +562,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 270,
-        "y": 420,
+        "x": 260,
+        "y": 360,
         "wires": [
             [
                 "402d984a96cd15a7"
@@ -587,8 +587,8 @@
         "checkall": "true",
         "repair": false,
         "outputs": 1,
-        "x": 450,
-        "y": 420,
+        "x": 440,
+        "y": 360,
         "wires": [
             [
                 "36718497d98b1bdf"
@@ -606,8 +606,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 640,
-        "y": 420,
+        "x": 630,
+        "y": 360,
         "wires": [
             [
                 "f0b13e6ec6b04787"
@@ -624,8 +624,8 @@
         "tls": true,
         "name": "apptestinz@gmail.com",
         "dname": "",
-        "x": 860,
-        "y": 420,
+        "x": 850,
+        "y": 360,
         "wires": []
     },
     {
@@ -633,14 +633,14 @@
         "type": "function",
         "z": "700a4e0be0c758d2",
         "name": "Message",
-        "func": "date = new Date();\ntime = date.toLocaleTimeString(\"en-US\", {\n    hour:\"2-digit\",\n    minute:\"2-digit\",\n    hour12:false\n})\n\nmsg.payload = \"At \" + time + \", this user is here.\";\nreturn msg;",
+        "func": "date = new Date();\ntime = date.toLocaleTimeString(\"en-US\", {\n    hour:\"2-digit\",\n    minute:\"2-digit\",\n    hour12:false\n})\n\nmsg.payload = \"At \" + time + \", this \" + msg.payload + \" is here.\";\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 420,
-        "y": 560,
+        "x": 520,
+        "y": 460,
         "wires": [
             [
                 "8043067fe5fc5a8b"
@@ -657,15 +657,204 @@
         "tls": true,
         "name": "apptestinz@gmail.com",
         "dname": "",
-        "x": 640,
-        "y": 560,
+        "x": 740,
+        "y": 460,
         "wires": []
+    },
+    {
+        "id": "173c4ee069db6da8",
+        "type": "mqtt out",
+        "z": "700a4e0be0c758d2",
+        "name": "",
+        "topic": "user/light",
+        "qos": "0",
+        "retain": "true",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "8fd8ab9f071409b1",
+        "x": 1240,
+        "y": 580,
+        "wires": []
+    },
+    {
+        "id": "d061455188288983",
+        "type": "ui_numeric",
+        "z": "700a4e0be0c758d2",
+        "name": "",
+        "label": "User Light Threshold",
+        "tooltip": "",
+        "group": "dd6a69fa5cd63ef0",
+        "order": 3,
+        "width": 0,
+        "height": 0,
+        "wrap": false,
+        "passthru": true,
+        "topic": "userLightThreshold",
+        "topicType": "str",
+        "format": "{{msg.payload}}",
+        "min": 0,
+        "max": "3000",
+        "step": "50",
+        "className": "",
+        "x": 780,
+        "y": 580,
+        "wires": [
+            [
+                "e0693578cebdaf3b"
+            ]
+        ]
+    },
+    {
+        "id": "da744323980f35f2",
+        "type": "ui_numeric",
+        "z": "700a4e0be0c758d2",
+        "name": "",
+        "label": "User Temperature Threshold",
+        "tooltip": "",
+        "group": "dd6a69fa5cd63ef0",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "wrap": false,
+        "passthru": false,
+        "topic": "userTempThreshold",
+        "topicType": "str",
+        "format": "{{msg.payload}}",
+        "min": "-20",
+        "max": "100",
+        "step": "5",
+        "className": "",
+        "x": 800,
+        "y": 520,
+        "wires": [
+            [
+                "f54004804dd35cdc"
+            ]
+        ]
+    },
+    {
+        "id": "bb7450f651f033c7",
+        "type": "mqtt out",
+        "z": "700a4e0be0c758d2",
+        "name": "",
+        "topic": "user/temperature",
+        "qos": "0",
+        "retain": "true",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "8fd8ab9f071409b1",
+        "x": 1270,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "bfca78d4e0b1b6dd",
+        "type": "function",
+        "z": "700a4e0be0c758d2",
+        "name": "Update Current User",
+        "func": "if (msg.payload != \"\" && msg.payload != null && msg.payload != \"undefined\") {\n    flow.set(\"user\", msg.payload);\n    return msg;\n}",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 300,
+        "y": 460,
+        "wires": [
+            [
+                "6ebfd70a61875298",
+                "de97fb227735c260",
+                "d95af59ae571608e"
+            ]
+        ]
+    },
+    {
+        "id": "f54004804dd35cdc",
+        "type": "function",
+        "z": "700a4e0be0c758d2",
+        "name": "Update User Temp",
+        "func": "flow.set(\"userTemp\" + flow.get(\"user\"), msg.payload);\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1050,
+        "y": 520,
+        "wires": [
+            [
+                "bb7450f651f033c7"
+            ]
+        ]
+    },
+    {
+        "id": "e0693578cebdaf3b",
+        "type": "function",
+        "z": "700a4e0be0c758d2",
+        "name": "Update User Light",
+        "func": "flow.set(\"userLight\" + flow.get(\"user\"), msg.payload);\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1040,
+        "y": 580,
+        "wires": [
+            [
+                "173c4ee069db6da8"
+            ]
+        ]
+    },
+    {
+        "id": "de97fb227735c260",
+        "type": "function",
+        "z": "700a4e0be0c758d2",
+        "name": "Set User Temp",
+        "func": "if (flow.get(\"userTemp\" + flow.get(\"user\")) == null) {\n    flow.set(\"userTemp\" + flow.get(\"user\"), 30);\n}\nmsg.payload = flow.get(\"userTemp\" + flow.get(\"user\"));\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 540,
+        "y": 520,
+        "wires": [
+            [
+                "da744323980f35f2"
+            ]
+        ]
+    },
+    {
+        "id": "d95af59ae571608e",
+        "type": "function",
+        "z": "700a4e0be0c758d2",
+        "name": "Set User Light",
+        "func": "if (flow.get(\"userLight\" + flow.get(\"user\")) == null) {\n    flow.set(\"userLight\" + flow.get(\"user\"), 500);\n}\nmsg.payload = flow.get(\"userLight\" + flow.get(\"user\"));\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 540,
+        "y": 580,
+        "wires": [
+            [
+                "d061455188288983"
+            ]
+        ]
     },
     {
         "id": "8fd8ab9f071409b1",
         "type": "mqtt-broker",
         "name": "",
-        "broker": "10.0.0.30",
+        "broker": "192.168.210.68",
         "port": "1883",
         "clientid": "",
         "usetls": false,
@@ -709,9 +898,9 @@
         "className": ""
     },
     {
-        "id": "1e0cf6ea06414446",
+        "id": "dd6a69fa5cd63ef0",
         "type": "ui_group",
-        "name": "RFID",
+        "name": "User Thresholds",
         "tab": "d6ae9f25.efcf1",
         "order": 7,
         "disp": true,

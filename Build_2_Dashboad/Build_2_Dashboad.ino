@@ -24,12 +24,14 @@ int light; // light intensity
 
 //const char* ssid = "TP-Link_8856_G";
 //const char* password = "87973365";
-//const char* ssid = "Merry Xmas";
-//const char* password = "09475325323";
 
-const char* ssid = "Homeless";
-const char* password = "Number11";
-const char* mqtt_server = "10.0.0.30";
+const char* ssid = "Merry Xmas";
+const char* password = "09475325323";
+const char* mqtt_server = "192.168.210.68";
+
+//const char* ssid = "Homeless";
+//const char* password = "Number11";
+//const char* mqtt_server = "10.0.0.30";
 
 //const char* mqtt_server = "192.168.0.104";
 //const char* ssid = "TP-Link_2AD8";
@@ -37,9 +39,7 @@ const char* mqtt_server = "10.0.0.30";
 
 //const char* ssid = "BigBalls";
 //const char* password = "Wagwan123";
-//const char* mqtt_server = "192.168.166.161";
-
-//const char* mqtt_server = "192.168.0.160";
+//const char* mqtt_server = "192.168.166.68";
 
 WiFiClient vanieriot;
 WiFiClient vanieriot2;
@@ -59,6 +59,8 @@ void callback(String topic, byte* message, unsigned int length) {
       messagein += (char)message[i];
     }
     
+    Serial.println("Fan is ");
+    Serial.println(messagein);
     if(messagein == "ON") {
       analogWrite(enable, 200);
     } else {
