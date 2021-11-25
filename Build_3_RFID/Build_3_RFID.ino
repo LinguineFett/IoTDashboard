@@ -15,22 +15,19 @@
 #define RECIPIENT_EMAIL "brandonrpi.receive@gmail.com" //Just set this as the same as the sender email.
 
 SMTPSession smtp;
-//const char* ssid = "TP-Link_8856_G";
+//const char* ssid = "TP-Link_8856";
 //const char* password = "87973365";
-//const char* ssid = "Merry Xmas";
-//const char* password = "09475325323";
 
-//const char* mqtt_server = "10.0.0.30";
+//const char* ssid = "BigBalls";
+//const char* password = "Wagwan123";
 
-//const char* mqtt_server = "192.168.0.104";
 //const char* ssid = "TP-Link_2AD8";
 //const char* password = "14730078";
 
-const char* ssid = "BELL746";
-const char* password = "D9F61C74";
-const char* mqtt_server = "192.168.2.239";
+const char* ssid = "Merry Xmas";
+const char* password = "09475325323";
 
-//const char* mqtt_server = "192.168.0.160";
+const char* mqtt_server = "192.168.210.68";
 
 constexpr uint8_t RST_PIN = D3;     // Configurable, see typical pin layout above
 constexpr uint8_t SS_PIN = D4;     // Configurable, see typical pin layout above
@@ -172,12 +169,12 @@ void loop() {
 
     if (tag == "21112995"){
       user = "Brandon";
-      userTemp = 24;
-      userLight = 1000;
-    }else if (tag == "12345678"){ // another tag...
-      user = "Other";
-      userTemp = 20;
-      userLight = 700;
+//      userTemp = 20;
+//      userLight = 1500;
+    }else if (tag == "67582184"){ // another tag... 67582184
+      user = "Nicolas";
+//      userTemp = 30;
+//      userLight = 700;
     }else{
       Serial.println("Invalid user");
       digitalWrite(BUZZER_PIN, HIGH);
@@ -189,14 +186,14 @@ void loop() {
     char tag_array[str_len];
     user.toCharArray(tag_array, str_len);
 
-    char usertempArr [8];
-    dtostrf(userTemp,6,2,usertempArr);
-    char userlightArr [8];
-    dtostrf(userLight,6,2,userlightArr);
+//    char usertempArr [8];
+//    dtostrf(userTemp,6,2,usertempArr);
+//    char userlightArr [8];
+//    dtostrf(userLight,6,2,userlightArr);
 
     client.publish("IoTlab/RFID", tag_array);
-    client.publish("user/temperature", usertempArr);
-    client.publish("user/light", userlightArr);
+//    client.publish("user/temperature", usertempArr);
+//    client.publish("user/light", userlightArr);
 
     tag = "";
     rfid.PICC_HaltA();
