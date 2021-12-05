@@ -1,7 +1,6 @@
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 #include <SPI.h>
-#include <MFRC522.h>
 #include <WiFiUdp.h>
 #include "DHTesp.h"
 
@@ -21,6 +20,10 @@ int light; // light intensity
 #define motor1 D1
 #define motor2 D2
 #define enable D3
+
+const char* ssid = "ENTER_WIFI_NAME_HERE";
+const char* password = "ENTER_WIFI_PASSWORD_HERE";
+const char* mqtt_server = "ENTER_WIFI_IP_ADDRESS_HERE";
 
 //const char* ssid = "BigBalls";
 //const char* password = "Wagwan123";
