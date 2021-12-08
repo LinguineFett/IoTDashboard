@@ -10,24 +10,15 @@
 
 #define SMTP_HOST "smtp.gmail.com" //SMTP gmail host.
 #define SMTP_PORT 465 //SMTP gmail port.
-#define AUTHOR_EMAIL "brandonrpi.send@gmail.com" //Sender email.
-#define AUTHOR_PASSWORD "nguyensend" //Sender email password.
-#define RECIPIENT_EMAIL "brandonrpi.receive@gmail.com" //Just set this as the same as the sender email.
+#define AUTHOR_EMAIL "ENTER_EMAIL_HERE" //Sender email.
+#define AUTHOR_PASSWORD "ENTER_EMAIL_PASSWORD_HERE" //Sender email password.
+#define RECIPIENT_EMAIL "ENTER_RECIPIENT_EMAIL_HERE" //Just set this as the same as the sender email.
 
 SMTPSession smtp;
-//const char* ssid = "TP-Link_8856";
-//const char* password = "87973365";
 
-//const char* ssid = "BigBalls";
-//const char* password = "Wagwan123";
-
-//const char* ssid = "TP-Link_2AD8";
-//const char* password = "14730078";
-
-const char* ssid = "Merry Xmas";
-const char* password = "09475325323";
-
-const char* mqtt_server = "192.168.210.68";
+const char* ssid = "ENTER_WIFI_NAME_HERE";
+const char* password = "ENTER_WIFI_PASSWORD_HERE";
+const char* mqtt_server = "ENTER_WIFI_IP_ADDRESS_HERE";
 
 constexpr uint8_t RST_PIN = D3;     // Configurable, see typical pin layout above
 constexpr uint8_t SS_PIN = D4;     // Configurable, see typical pin layout above
@@ -90,30 +81,11 @@ void setup_wifi() {
   Serial.println(WiFi.localIP());
 }
 
-
 void callback(String topic, byte* message, unsigned int length) {
   Serial.print("Message arrived on topic: ");
   Serial.print(topic);
   Serial.print(". Message: ");
-
-  if (topic == "room/fan") {  // Press Enter when updating the threshold, and wait a few seconds
-    String messagein;
-  
-    for (int i = 0; i < length; i++) {
-      //Serial.print((char)message[i]);
-      messagein += (char)message[i];
-    }
-
-    Serial.println(messagein);
-    
-//    if(messagein == "ON") {
-//      analogWrite(enable, 200);
-//    } else {
-//      analogWrite(enable, 0);
-//    }
-  }
 }
-
 
 void reconnect() {
   while (!client.connected()) {
@@ -135,9 +107,6 @@ void reconnect() {
 String tag;
 String user;
 
-float userTemp;
-int userLight;
-
 void setup() {
   Serial.begin(115200);
   setup_wifi();
@@ -151,7 +120,6 @@ void setup() {
 }
 
 void loop() {
-
   if (!client.connected()) {
     reconnect();
   }
@@ -169,12 +137,8 @@ void loop() {
 
     if (tag == "21112995"){
       user = "Brandon";
-//      userTemp = 20;
-//      userLight = 1500;
     }else if (tag == "67582184"){ // another tag... 67582184
       user = "Nicolas";
-//      userTemp = 30;
-//      userLight = 700;
     }else{
       Serial.println("Invalid user");
       digitalWrite(BUZZER_PIN, HIGH);
@@ -186,19 +150,11 @@ void loop() {
     char tag_array[str_len];
     user.toCharArray(tag_array, str_len);
 
-//    char usertempArr [8];
-//    dtostrf(userTemp,6,2,usertempArr);
-//    char userlightArr [8];
-//    dtostrf(userLight,6,2,userlightArr);
-
     client.publish("IoTlab/RFID", tag_array);
-//    client.publish("user/temperature", usertempArr);
-//    client.publish("user/light", userlightArr);
 
     tag = "";
     rfid.PICC_HaltA();
     rfid.PCD_StopCrypto1();
-    //delay(3000);
   }
 }
   
