@@ -25,10 +25,6 @@ const char* ssid = "ENTER_WIFI_NAME_HERE";
 const char* password = "ENTER_WIFI_PASSWORD_HERE";
 const char* mqtt_server = "ENTER_WIFI_IP_ADDRESS_HERE";
 
-//const char* ssid = "BigBalls";
-//const char* password = "Wagwan123";
-//const char* mqtt_server = "192.168.166.68";
-
 WiFiClient vanieriot;
 WiFiClient vanieriot2;
 PubSubClient clientFan(vanieriot);
